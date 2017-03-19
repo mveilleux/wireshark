@@ -355,16 +355,16 @@ write_json_proto_tree(output_fields_t* fields, print_args_t *print_args, gchar *
         g_strlcpy(ts, "XXXX-XX-XX", sizeof ts); /* XXX - better way of saying "Not representable"? */
 
     if (!json_is_first)
-        fputs("  ,\n", fh);
+        fputs("\n", fh);
     else
         json_is_first = FALSE;
 
-    fputs("  {\n", fh);
-    fprintf(fh, "    \"_index\": \"packets-%s\",\n", ts);
-    fputs("    \"_type\": \"pcap_file\",\n", fh);
-    fputs("    \"_score\": null,\n", fh);
-    fputs("    \"_source\": {\n", fh);
-    fputs("      \"layers\": {\n", fh);
+    fputs("  {", fh);
+    fprintf(fh, "    \"_index\": \"packets-%s\",", ts);
+    fputs("    \"_type\": \"pcap_file\",", fh);
+    fputs("    \"_score\": null,", fh);
+    fputs("    \"_source\": {", fh);
+    fputs("      \"layers\": {", fh);
 
     if (fields == NULL || fields->fields == NULL) {
         /* Write out all fields */
@@ -386,9 +386,9 @@ write_json_proto_tree(output_fields_t* fields, print_args_t *print_args, gchar *
         write_specified_fields(FORMAT_JSON, fields, edt, NULL, fh);
     }
 
-    fputs("      }\n", fh);
-    fputs("    }\n", fh);
-    fputs("  }\n", fh);
+    fputs("      }", fh);
+    fputs("    }", fh);
+    fputs("  }", fh);
 
 }
 
@@ -410,7 +410,7 @@ write_ek_proto_tree(output_fields_t* fields, print_args_t *print_args, gchar **p
     else
         g_strlcpy(ts, "XXXX-XX-XX", sizeof ts); /* XXX - better way of saying "Not representable"? */
 
-    fprintf(fh, "{\"index\" : {\"_index\": \"packets-%s\", \"_type\": \"pcap_file\", \"_score\": null}}\n", ts);
+    fprintf(fh, "{\"index\" : {\"_index\": \"packets-%s\", \"_type\": \"pcap_file\", \"_score\": null}}", ts);
     /* Timestamp added for time indexing in Elasticsearch */
     fprintf(fh, "{\"timestamp\" : \"%" G_GUINT64_FORMAT "%03d\", \"layers\" : {", (guint64)edt->pi.abs_ts.secs, edt->pi.abs_ts.nsecs/1000000);
 
@@ -430,7 +430,7 @@ write_ek_proto_tree(output_fields_t* fields, print_args_t *print_args, gchar **p
         write_specified_fields(FORMAT_EK, fields, edt, NULL, fh);
     }
 
-    fputs("}}\n", fh);
+    fputs("}}", fh);
 }
 
 void
@@ -743,13 +743,13 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
         print_escaped_json(pdata->fh, label_ptr);
 
         if (node->first_child != NULL) {
-            fputs("\": {\n", pdata->fh);
+            fputs("\": {", pdata->fh);
         }
         else {
             if (node->next == NULL) {
-              fputs("\": \"\"\n",  pdata->fh);
+              fputs("\": \"\"",  pdata->fh);
             } else {
-              fputs("\": \"\",\n",  pdata->fh);
+              fputs("\": \"\",",  pdata->fh);
             }
         }
     }
@@ -809,12 +809,12 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
             fprintf(pdata->fh, ", %" G_GINT32_MODIFIER "d", (gint32)fi->value.ftype->ftype);
 
             if (pdata->print_text) {
-                fputs("],\n", pdata->fh);
+                fputs("],", pdata->fh);
             } else {
                 if (node->next == NULL && node->first_child == NULL) {
-                    fputs("]\n", pdata->fh);
+                    fputs("]", pdata->fh);
                 } else {
-                    fputs("],\n", pdata->fh);
+                    fputs("],", pdata->fh);
                 }
             }
 
@@ -831,7 +831,7 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
                 fputs("\"", pdata->fh);
                 print_escaped_json(pdata->fh, fi->hfinfo->abbrev);
 
-                fputs("\": {\n", pdata->fh);
+                fputs("\": {", pdata->fh);
             } else if (pdata->print_text) {
                 print_indent(pdata->level + 3, pdata->fh);
 
@@ -848,9 +848,9 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
                     print_escaped_json(pdata->fh, label_ptr);
                 }
                 if (node->next == NULL) {
-                    fputs("\"\n",  pdata->fh);
+                    fputs("\"",  pdata->fh);
                 } else {
-                    fputs("\",\n",  pdata->fh);
+                    fputs("\",",  pdata->fh);
                 }
             }
             break;
@@ -861,7 +861,7 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
                 fputs("\"", pdata->fh);
                 print_escaped_json(pdata->fh, fi->hfinfo->abbrev);
 
-                fputs("\": {\n", pdata->fh);
+                fputs("\": {", pdata->fh);
             } else if (pdata->print_text) {
                 print_indent(pdata->level + 3, pdata->fh);
 
@@ -869,9 +869,9 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
                 print_escaped_json(pdata->fh, fi->hfinfo->abbrev);
 
                 if (node->next == NULL) {
-                  fputs("\": \"\"\n",  pdata->fh);
+                  fputs("\": \"\"",  pdata->fh);
                 } else {
-                  fputs("\": \"\",\n",  pdata->fh);
+                  fputs("\": \"\",",  pdata->fh);
                 }
             }
             break;
@@ -888,7 +888,7 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
                       fputs("\": \"", pdata->fh);
                       print_escaped_json(pdata->fh, dfilter_string);
                       if (node->first_child != NULL) {
-                        fputs("\",\n", pdata->fh);
+                        fputs("\",", pdata->fh);
                       }
                     }
                 }
@@ -896,9 +896,9 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
 
                 if (node->first_child == NULL) {
                     if (node->next == NULL) {
-                        fputs("\"\n", pdata->fh);
+                        fputs("\"", pdata->fh);
                     } else {
-                        fputs("\",\n", pdata->fh);
+                        fputs("\",", pdata->fh);
                     }
                 }
             }
@@ -908,7 +908,7 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
 
                 fputs("\"", pdata->fh);
                 print_escaped_json(pdata->fh, fi->hfinfo->abbrev);
-                fputs("_tree\": {\n", pdata->fh);
+                fputs("_tree\": {", pdata->fh);
             }
         }
 
@@ -938,7 +938,7 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
             /* print dummy field */
             fputs("\"filtered\": \"", pdata->fh);
             print_escaped_json(pdata->fh, fi->hfinfo->abbrev);
-            fputs("\"\n", pdata->fh);
+            fputs("\"", pdata->fh);
         }
     }
 
@@ -947,9 +947,9 @@ proto_tree_write_node_json(proto_node *node, gpointer data)
 
         /* Close off current element */
         if (node->next == NULL) {
-            fputs("}\n", pdata->fh);
+            fputs("}", pdata->fh);
         } else {
-            fputs("},\n", pdata->fh);
+            fputs("},", pdata->fh);
         }
     }
 }
